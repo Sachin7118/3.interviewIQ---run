@@ -10,19 +10,32 @@ import interviewRouter from "./routes/interview.route.js"
 import paymentRouter from "./routes/payment.route.js"
 
 const app = express()
+app.set("trust proxy", 1)
+
+const configuredClientUrls = process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(",").map(url => url.trim().replace(/\/+$/, "")).filter(Boolean)
+    : []
+
 const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
     "http://localhost:3000",
-    process.env.CLIENT_URL,
-].filter(Boolean)
+    "https://three-interviewiq-run-2.onrender.com",
+    ...configuredClientUrls,
+]
 
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true)
-        if (allowedOrigins.includes(origin) || /^http:\/\/localhost:\d+$/.test(origin) || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) {
+        const cleanOrigin = origin.replace(/\/+$/, "")
+        if (
+            allowedOrigins.includes(cleanOrigin) ||
+            allowedOrigins.includes(origin) ||
+            /^http:\/\/localhost:\d+$/.test(origin) ||
+            /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)
+        ) {
             return callback(null, true)
         }
         return callback(new Error("Not allowed by CORS"))

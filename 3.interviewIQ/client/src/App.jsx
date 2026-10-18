@@ -11,7 +11,8 @@ import InterviewHistory from './pages/InterviewHistory'
 import Pricing from './pages/Pricing'
 import InterviewReport from './pages/InterviewReport'
 
-export const ServerUrl = import.meta.env.VITE_SERVER_URL || "https://three-interviewiq-run-1.onrender.com"
+const rawServerUrl = import.meta.env.VITE_SERVER_URL || "https://three-interviewiq-run-1.onrender.com"
+export const ServerUrl = rawServerUrl.replace(/\/+$/, "")
 
 function App() {
   const dispatch = useDispatch()
