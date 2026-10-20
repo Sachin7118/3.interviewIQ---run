@@ -33,10 +33,17 @@ function Auth({ isModel = false, onSuccess }) {
         setError("")
 
         try {
+            console.log("Initiating Google Sign-In with popup...", {
+                currentHost: window.location.hostname,
+                currentOrigin: window.location.origin
+            })
+
             const response = await signInWithPopup(auth, provider)
             const user = response.user
             const name = user.displayName || user.email?.split('@')[0] || "User"
             const email = user.email
+
+            console.log("Firebase OAuth succeeded, syncing with backend:", `${ServerUrl}/api/auth/google`)
 
             const result = await axios.post(
                 ServerUrl + "/api/auth/google",
@@ -55,7 +62,15 @@ function Auth({ isModel = false, onSuccess }) {
                 navigate(target, { replace: true })
             }
         } catch (err) {
-            console.error("Google Auth error:", err)
+            console.error("Google Auth error details:", {
+                code: err.code,
+                message: err.message,
+                status: err.response?.status,
+                data: err.response?.data,
+                hostname: window.location.hostname,
+                origin: window.location.origin,
+                rawError: err
+            })
             dispatch(setUserData(null))
 
             if (err.code === "auth/popup-closed-by-user") {
@@ -63,7 +78,8 @@ function Auth({ isModel = false, onSuccess }) {
             } else if (err.code === "auth/cancelled-popup-request") {
                 setError("Sign-in was cancelled. Please try again.")
             } else if (err.code === "auth/unauthorized-domain") {
-                setError("This domain is not authorized in Firebase Console.")
+                const hostname = window.location.hostname || "current domain"
+                setError(`This domain (${hostname}) is not authorized in Firebase Console.`)
             } else if (err.response?.data?.message) {
                 setError(err.response.data.message)
             } else if (err.message) {

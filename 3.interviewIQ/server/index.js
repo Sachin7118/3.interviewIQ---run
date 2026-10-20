@@ -30,12 +30,22 @@ app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true)
         const cleanOrigin = origin.replace(/\/+$/, "")
-        if (
+        let isAllowed =
             allowedOrigins.includes(cleanOrigin) ||
             allowedOrigins.includes(origin) ||
             /^http:\/\/localhost:\d+$/.test(origin) ||
             /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)
-        ) {
+
+        if (!isAllowed) {
+            try {
+                const parsed = new URL(origin)
+                if (parsed.hostname.endsWith(".onrender.com")) {
+                    isAllowed = true
+                }
+            } catch (e) {}
+        }
+
+        if (isAllowed) {
             return callback(null, true)
         }
         return callback(new Error("Not allowed by CORS"))
